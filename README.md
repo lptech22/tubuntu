@@ -7,7 +7,7 @@
 
 ---
 
-## 🚀 Perintah Instalasi (Satu Perintah)
+## 🚀 Instalasi (Satu Perintah)
 
 Buka **Termux** lalu tempelkan salah satu perintah berikut:
 
