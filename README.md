@@ -69,7 +69,6 @@ Setelah instalasi selesai, cukup gunakan perintah tubuntu yang super mudah:
 ## 📺 Kunjungi & Hubungi Kami
 | Platform | Link |
 |---|---|
-| **YouTube** | LP Tech Official |
 | **GitHub** | lptech22 |
 <p align="center">
 <b>🔥 TUbuntu by LP Tech - Solusi Linux Desktop Ringan di Android 🔥</b>
