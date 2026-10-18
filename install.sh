@@ -2,8 +2,8 @@
 
 # ==============================================================================
 # Script Name: Automatic Ubuntu XFCE Setup for Termux (No Root)
-# Version    : 1.1 (Stable & Ultra-Reliable)
-# Author     : Zainal Abidin / LP Tech
+# Version    : 1.2 (With Auto Device & Specs Detection)
+# Author     : Zainal Abidin / LP Tech (lptech22)
 # ==============================================================================
 
 CYAN='\033[0;36m'
@@ -15,20 +15,44 @@ NC='\033[0m'
 
 clear
 echo -e "${CYAN}======================================================${NC}"
-echo -e "${GREEN}  AUTOMATIC UBUNTU XFCE SETUP FOR TERMUX v1.1 (NO ROOT)${NC}"
+echo -e "${GREEN}  AUTOMATIC UBUNTU XFCE SETUP FOR TERMUX v1.2 (NO ROOT)${NC}"
 echo -e "${CYAN}======================================================${NC}"
 echo ""
 
-# 1. Validasi Arsitektur Perangkat (Cegah Gagal di CPU 32-bit)
+# 1. Deteksi Otomatis Perangkat & Spesifikasi Hardware
+echo -e "${YELLOW}[*] Mendeteksi spesifikasi perangkat Anda...${NC}"
+
+# Cek Arsitektur CPU
 ARCH=$(uname -m)
+
+# Cek Total RAM (Perkiraan dari /proc/meminfo)
+if [ -f /proc/meminfo ]; then
+    TOTAL_RAM_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+    TOTAL_RAM_MB=$((TOTAL_RAM_KB / 1024))
+    TOTAL_RAM_GB=$(awk "BEGIN {printf \"%.1f\", $TOTAL_RAM_MB / 1024}")
+else
+    TOTAL_RAM_GB="Tidak diketahui"
+fi
+
+# Cek Penyimpanan Internal yang Tersedia (Termux home directory)
+FREE_STORAGE=$(df -h /data/data/com.termux/files/home | awk 'NR==2 {print $4}')
+
+sleep 1
+echo -e "${BLUE}------------------------------------------------------${NC}"
+echo -e " ${GREEN}✔ Arsitektur CPU :${NC} $ARCH"
+echo -e " ${GREEN}✔ Kapasitas RAM  :${NC} ${TOTAL_RAM_GB} GB"
+echo -e " ${GREEN}✔ Sisa Storage   :${NC} $FREE_STORAGE"
+echo -e "${BLUE}------------------------------------------------------${NC}"
+
+# Validasi Keamanan Arsitektur (Wajib aarch64 / ARM64)
 if [ "$ARCH" != "aarch64" ]; then
     echo -e "${RED}[ERROR] Perangkat Anda berarsitektur $ARCH.${NC}"
-    echo -e "${RED}Skrip v1.1 ini membutuhkan perangkat Android 64-bit (aarch64).${NC}"
+    echo -e "${RED}Skrip ini membutuhkan perangkat Android 64-bit (aarch64).${NC}"
     exit 1
 fi
 
 # 2. Validasi Akses Penyimpanan
-echo -e "${YELLOW}[1/6] Memeriksa izin penyimpanan Termux...${NC}"
+echo -e "\n${YELLOW}[1/6] Memeriksa izin penyimpanan Termux...${NC}"
 termux-setup-storage
 
 # 3. Update Paket Termux & Install Dependensi
@@ -106,7 +130,7 @@ chmod +x $PREFIX/bin/startlinux
 
 # 8. Selesai
 echo -e "\n${GREEN}======================================================${NC}"
-echo -e "${GREEN}          INSTALASI v1.1 BERHASIL SELESAI!            ${NC}"
+echo -e "${GREEN}          INSTALASI v1.2 BERHASIL SELESAI!            ${NC}"
 echo -e "${GREEN}======================================================${NC}"
 echo -e "Untuk menjalankan Ubuntu Desktop:"
 echo -e "1. Buka aplikasi ${CYAN}Termux-X11${NC}"
