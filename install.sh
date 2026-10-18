@@ -9,7 +9,6 @@
 #  - Hanya menginstal Firefox dan VS Code
 #  
 #  Pembuat: LP Tech
-#  YouTube: https://youtube.com/@LPTech
 #######################################################
 
 # ============== KONFIGURASI ==============
