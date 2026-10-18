@@ -56,8 +56,8 @@ Setelah instalasi selesai, cukup gunakan perintah tubuntu yang super mudah:
 | Persyaratan | Detail |
 |---|---|
 | **Android** | Versi 7.0 atau yang lebih baru |
-| **Termux** | Unduh dari GitHub (*JANGAN dari Play Store!*) |
-| **Termux-X11** | Unduh dari GitHub |
+| **Termux** | [Download from GitHub](https://github.com/termux/termux-app/releases) (NOT Play Store!) |
+| **Termux-X11** | [Download from GitHub](https://github.com/termux/termux-x11/releases) |
 | **Penyimpanan** | Sisa ruang kosong ~3-4 GB |
 | **Koneksi Internet** | Dibutuhkan untuk proses instalasi awal |
 > ⚠️ **Penting:** Pastikan mengunduh aplikasi Termux dari GitHub/F-Droid, bukan dari Google Play Store karena versi Play Store sudah tidak diperbarui.
