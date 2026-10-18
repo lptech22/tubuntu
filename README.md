@@ -1,6 +1,3 @@
-Berikut adalah kode ketiga untuk file **README.md** versi **TUbuntu (Termux Ubuntu) by LP Tech**.
-Dokumentasi ini ditulis dalam **Bahasa Indonesia**, disesuaikan dengan username GitHub Anda (**lptech22**), dan menyajikan panduan cara instalasi, penggunaan menu interaktif tubuntu, serta informasi fitur secara rapi.
-Silakan simpan file ini sebagai **README.md**:
 ```markdown
 # 📱 TUbuntu (Termux Ubuntu) by LP Tech
 ### Jalankan Desktop Linux dengan Akselerasi GPU di Android (Tanpa Root!)
