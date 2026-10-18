@@ -1,795 +1,372 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# ============================================================
-# LP TECH - UBUNTU TERMUX AUTO v1.1
-# XFCE Desktop for Termux + Termux:X11
-# No Root Required
-# ============================================================
+#######################################################
+📱 UBUNTU TERMUX INSTALLER - XFCE Desktop v2.0
+Features:
+- Overall progress percentage
+- GPU acceleration auto-setup (Turnip/Zink)
+- Firefox browser pre-installed
+- One-click desktop launch
+Author: LP Tech
+#######################################################
 
-set -o pipefail
+============== CONFIGURATION ==============
 
-VERSION="1.1"
-PROJECT="LP Tech - ubuntu-termux-auto"
-PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
-CONFIG_DIR="$HOME/.config/lp-tech"
-BIN_DIR="$HOME/.local/bin"
-LOG_FILE="$CONFIG_DIR/install.log"
-MANIFEST="$CONFIG_DIR/installed-packages.txt"
-BASHRC="$HOME/.bashrc"
+TOTAL_STEPS=8
+CURRENT_STEP=0
 
-mkdir -p "$CONFIG_DIR" "$BIN_DIR"
-touch "$LOG_FILE" "$MANIFEST"
+============== COLORS ==============
 
-# ---------- COLORS ----------
-
-RESET='\033[0m'
-BOLD='\033[1m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
+WHITE='\033[1;37m'
+GRAY='\033[0;90m'
+NC='\033[0m'
+BOLD='\033[1m'
 
-# ---------- HELPERS ----------
+============== PROGRESS FUNCTIONS ==============
 
-log() {
-    printf '[%s] %s\n' "$(date '+%F %T')" "$*" >> "$LOG_FILE"
+update_progress() {
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    PERCENT=$((CURRENT_STEP * 100 / TOTAL_STEPS))
+
+    FILLED=$((PERCENT / 5))
+    EMPTY=$((20 - FILLED))
+    BAR="${GREEN}"
+    for ((i=0; i<FILLED; i++)); do BAR+="█"; done
+    BAR+="${GRAY}"
+    for ((i=0; i<EMPTY; i++)); do BAR+="░"; done
+    BAR+="${NC}"
+
+    echo ""
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN} 📊 OVERALL PROGRESS: ${WHITE}Step ${CURRENT_STEP}/${TOTAL_STEPS}${NC} ${BAR} ${WHITE}${PERCENT}%${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
 }
 
-info() {
-    printf "${CYAN}[INFO]${RESET} %s\n' "$*"
-    log "INFO: $*"
-}
+spinner() {
+    local pid=$1
+    local message=$2
+    local spin='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+    local i=0
 
-success() {
-    printf "${GREEN}[ OK ]${RESET} %s\n" "$*"
-    log "OK: $*"
-}
-
-warn() {
-    printf "${YELLOW}[WARN]${RESET} %s\n" "$*"
-    log "WARN: $*"
-}
-
-error() {
-    printf "${RED}[ERROR]${RESET} %s\n" "$*"
-    log "ERROR: $*"
-}
-
-pause() {
-    printf '\nTekan Enter untuk melanjutkan...'
-    read -r _
-}
-
-ask_yes_no() {
-    local answer
-
-    while true; do
-        printf '%s [y/N]: ' "$1"
-        read -r answer
-
-        case "$answer" in
-            y|Y|yes|YES|Yes) return 0 ;;
-            n|N|no|NO|No|"") return 1 ;;
-            *) printf 'Masukkan y atau n.\n' ;;
-        esac
+    while kill -0 $pid 2>/dev/null; do
+        i=$(( (i+1) % 10 ))
+        printf "\r ${YELLOW}⏳${NC} ${message} ${CYAN}${spin:$i:1}${NC} "
+        sleep 0.1
     done
+    wait $pid
+    local exit_code=$?
+    if [ $exit_code -eq 0 ]; then
+        printf "\r ${GREEN}✓${NC} ${message} \n"
+    else
+        printf "\r ${RED}✗${NC} ${message} ${RED}(failed)${NC} \n"
+    fi
+    return $exit_code
 }
 
-banner() {
-    clear 2>/dev/null || true
+install_pkg() {
+    local pkg=$1
+    local name=${2:-$pkg}
+    (yes | pkg install $pkg -y > /dev/null 2>&1) & spinner $! "Installing ${name}..."
+}
 
-    printf "${CYAN}"
-    cat <<'EOF'
- _      ____    _____          _
-| |    |  _ \  |_   _|__   ___| |__
-| |    | |_) |   | |/ _ \ / __| '_ \
-| |___ |  __/    | | (_) | (__| | | |
-|_____||_|       |_|\___/ \___|_| |_|
+============== BANNER ==============
 
-       LP TECH | VERSION 1.1
-    TERMUX + XFCE + TERMUX:X11
+show_banner() {
+    clear
+    echo -e "${CYAN}"
+    cat << 'BANNER'
+╔══════════════════════════════════════╗
+║                                      ║
+║   🚀 UBUNTU TERMUX INSTALLER v2.0 🚀   ║
+║                                      ║
+║              By LP Tech              ║
+║                                      ║
+╚══════════════════════════════════════╝
+BANNER
+    echo -e "${NC}"
+    echo -e "${WHITE} By LP Tech${NC}"
+    echo ""
+}
+
+============== DEVICE DETECTION ==============
+
+detect_device() {
+    echo -e "${PURPLE}[*] Detecting your device...${NC}"
+    echo ""
+
+    DEVICE_MODEL=$(getprop ro.product.model 2>/dev/null || echo "Unknown")
+    DEVICE_BRAND=$(getprop ro.product.brand 2>/dev/null || echo "Unknown")
+    ANDROID_VERSION=$(getprop ro.build.version.release 2>/dev/null || echo "Unknown")
+    CPU_ABI=$(getprop ro.product.cpu.abi 2>/dev/null || echo "arm64-v8a")
+    
+    GPU_VENDOR=$(getprop ro.hardware.egl 2>/dev/null || echo "")
+
+    echo -e " ${GREEN}📱${NC} Device: ${WHITE}${DEVICE_BRAND} ${DEVICE_MODEL}${NC}"
+    echo -e " ${GREEN}🤖${NC} Android: ${WHITE}${ANDROID_VERSION}${NC}"
+    echo -e " ${GREEN}⚙️${NC} CPU: ${WHITE}${CPU_ABI}${NC}"
+
+    if [[ "$GPU_VENDOR" == *"adreno"* ]] || [[ "$DEVICE_BRAND" == *"samsung"* ]] || [[ "$DEVICE_BRAND" == *"Samsung"* ]] || [[ "$DEVICE_BRAND" == *"oneplus"* ]] || [[ "$DEVICE_BRAND" == *"xiaomi"* ]]; then
+        GPU_DRIVER="freedreno"
+        echo -e " ${GREEN}🎮${NC} GPU: ${WHITE}Adreno (Qualcomm) - Turnip driver${NC}"
+    else
+        GPU_DRIVER="swrast"
+        echo -e " ${GREEN}🎮${NC} GPU: ${WHITE}Software rendering${NC}"
+    fi
+    echo ""
+    sleep 1
+}
+
+============== STEP 1: UPDATE SYSTEM ==============
+
+step_update() {
+    update_progress
+    echo -e "${PURPLE}[Step ${CURRENT_STEP}/${TOTAL_STEPS}] Updating system packages...${NC}"
+    echo ""
+    (yes | pkg update -y > /dev/null 2>&1) & spinner $! "Updating package lists..."
+    (yes | pkg upgrade -y > /dev/null 2>&1) & spinner $! "Upgrading installed packages..."
+}
+
+============== STEP 2: INSTALL REPOSITORIES ==============
+
+step_repos() {
+    update_progress
+    echo -e "${PURPLE}[Step ${CURRENT_STEP}/${TOTAL_STEPS}] Adding package repositories...${NC}"
+    echo ""
+    install_pkg "x11-repo" "X11 Repository"
+    install_pkg "tur-repo" "TUR Repository (Firefox)"
+}
+
+============== STEP 3: INSTALL TERMUX-X11 ==============
+
+step_x11() {
+    update_progress
+    echo -e "${PURPLE}[Step ${CURRENT_STEP}/${TOTAL_STEPS}] Installing Termux-X11...${NC}"
+    echo ""
+    install_pkg "termux-x11-nightly" "Termux-X11 Display Server"
+    install_pkg "xorg-xrandr" "XRandR (Display Settings)"
+}
+
+============== STEP 4: INSTALL DESKTOP ==============
+
+step_desktop() {
+    update_progress
+    echo -e "${PURPLE}[Step ${CURRENT_STEP}/${TOTAL_STEPS}] Installing XFCE4 Desktop...${NC}"
+    echo ""
+    install_pkg "xfce4" "XFCE4 Desktop Environment"
+    install_pkg "xfce4-terminal" "XFCE4 Terminal"
+    install_pkg "thunar" "Thunar File Manager"
+    install_pkg "mousepad" "Mousepad Text Editor"
+}
+
+============== STEP 5: INSTALL GPU DRIVERS ==============
+
+step_gpu() {
+    update_progress
+    echo -e "${PURPLE}[Step ${CURRENT_STEP}/${TOTAL_STEPS}] Installing GPU Acceleration (Turnip/Zink)...${NC}"
+    echo ""
+    install_pkg "mesa-zink" "Mesa Zink (OpenGL over Vulkan)"
+    if [ "$GPU_DRIVER" == "freedreno" ]; then
+        install_pkg "mesa-vulkan-icd-freedreno" "Turnip Adreno GPU Driver"
+    else
+        install_pkg "mesa-vulkan-icd-swrast" "Software Vulkan Renderer"
+    fi
+    install_pkg "vulkan-loader-android" "Vulkan Loader"
+    echo -e " ${GREEN}✓${NC} GPU acceleration configured!"
+}
+
+============== STEP 6: INSTALL AUDIO ==============
+
+step_audio() {
+    update_progress
+    echo -e "${PURPLE}[Step ${CURRENT_STEP}/${TOTAL_STEPS}] Installing Audio Support...${NC}"
+    echo ""
+    install_pkg "pulseaudio" "PulseAudio Sound Server"
+}
+
+============== STEP 7: INSTALL FIREFOX & UTILITIES ==============
+
+step_apps() {
+    update_progress
+    echo -e "${PURPLE}[Step ${CURRENT_STEP}/${TOTAL_STEPS}] Installing Firefox & Utilities...${NC}"
+    echo ""
+    install_pkg "firefox" "Firefox Browser"
+    install_pkg "git" "Git Version Control"
+    install_pkg "wget" "Wget Downloader"
+    install_pkg "curl" "cURL"
+}
+
+============== STEP 8: CREATE LAUNCHER SCRIPTS & SHORTCUTS ==============
+
+step_launchers() {
+    update_progress
+    echo -e "${PURPLE}[Step ${CURRENT_STEP}/${TOTAL_STEPS}] Creating Launcher Scripts & Shortcuts...${NC}"
+    echo ""
+
+    mkdir -p ~/.config
+    cat > ~/.config/ubuntu-gpu.sh << 'GPUEOF'
+# Ubuntu Termux - GPU Acceleration Config
+export MESA_NO_ERROR=1
+export MESA_GL_VERSION_OVERRIDE=4.6
+export MESA_GLES_VERSION_OVERRIDE=3.2
+export GALLIUM_DRIVER=zink
+export MESA_LOADER_DRIVER_OVERRIDE=zink
+export TU_DEBUG=noconform
+export MESA_VK_WSI_PRESENT_MODE=immediate
+export ZINK_DESCRIPTORS=lazy
+GPUEOF
+    echo -e " ${GREEN}✓${NC} GPU config created"
+
+    if ! grep -q "ubuntu-gpu.sh" ~/.bashrc 2>/dev/null; then
+        echo 'source ~/.config/ubuntu-gpu.sh 2>/dev/null' >> ~/.bashrc
+    fi
+
+    cat > ~/start-ubuntu.sh << 'LAUNCHEREOF'
+#!/data/data/com.termux/files/usr/bin/bash
+echo ""
+echo "🚀 Starting Ubuntu Termux Desktop..."
+echo ""
+
+source ~/.config/ubuntu-gpu.sh 2>/dev/null
+
+echo "🔄 Cleaning up old sessions..."
+pkill -9 -f "termux.x11" 2>/dev/null
+pkill -9 -f "xfce" 2>/dev/null
+pkill -9 -f "dbus" 2>/dev/null
+
+unset PULSE_SERVER
+pulseaudio --kill 2>/dev/null
+sleep 0.5
+echo "🔊 Starting audio server..."
+pulseaudio --start --exit-idle-time=-1
+sleep 1
+pactl load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1 2>/dev/null
+export PULSE_SERVER=127.0.0.1
+
+echo "📺 Starting X11 display server..."
+termux-x11 :0 -ac &
+sleep 3
+
+export DISPLAY=:0
+
+echo "🖥️ Launching XFCE4 Desktop..."
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo " 📱 Open the Termux-X11 app to see desktop!"
+echo " 🔊 Audio is enabled!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+exec startxfce4
+LAUNCHEREOF
+    chmod +x ~/start-ubuntu.sh
+    echo -e " ${GREEN}✓${NC} Created ~/start-ubuntu.sh"
+
+    cat > ~/stop-ubuntu.sh << 'STOPEOF'
+#!/data/data/com.termux/files/usr/bin/bash
+echo "Stopping Ubuntu Termux Desktop..."
+pkill -9 -f "termux.x11" 2>/dev/null
+pkill -9 -f "pulseaudio" 2>/dev/null
+pkill -9 -f "xfce" 2>/dev/null
+pkill -9 -f "dbus" 2>/dev/null
+echo "Desktop stopped."
+STOPEOF
+    chmod +x ~/stop-ubuntu.sh
+    echo -e " ${GREEN}✓${NC} Created ~/stop-ubuntu.sh"
+
+    mkdir -p ~/Desktop
+    cat > ~/Desktop/Firefox.desktop << 'EOF'
+[Desktop Entry]
+Name=Firefox
+Comment=Web Browser
+Exec=firefox
+Icon=firefox
+Type=Application
+Categories=Network;WebBrowser;
 EOF
-    printf "${RESET}\n"
-    printf '%s\n\n' 'Desktop installer for Android - no root required.'
+
+    cat > ~/Desktop/Terminal.desktop << 'EOF'
+[Desktop Entry]
+Name=Terminal
+Comment=XFCE Terminal
+Exec=xfce4-terminal
+Icon=utilities-terminal
+Type=Application
+Categories=System;TerminalEmulator;
+EOF
+
+    chmod +x ~/Desktop/*.desktop 2>/dev/null
+    echo -e " ${GREEN}✓${NC} Desktop shortcuts created"
 }
 
-# ---------- PACKAGE HELPERS ----------
+============== COMPLETION ==============
 
-package_installed() {
-    dpkg-query -W -f='${Status}' "$1" 2>/dev/null |
-        grep -q 'install ok installed'
+show_completion() {
+    echo ""
+    echo -e "${GREEN}"
+    cat << 'COMPLETE'
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║               ✅ INSTALLATION COMPLETE! ✅                    ║
+║                                                               ║
+║               🎉 100% - All Done! 🎉                          ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+COMPLETE
+    echo -e "${NC}"
+
+    echo -e "${WHITE}📱 Your Ubuntu Termux Desktop is ready!${NC}"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${WHITE}🚀 TO START THE DESKTOP:${NC}"
+    echo -e "   ${GREEN}bash ~/start-ubuntu.sh${NC}"
+    echo ""
+    echo -e "${WHITE}🛑 TO STOP THE DESKTOP:${NC}"
+    echo -e "   ${GREEN}bash ~/stop-ubuntu.sh${NC}"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${CYAN}📦 INSTALLED APPLICATIONS:${NC}"
+    echo -e " • Firefox Browser"
+    echo -e " • XFCE4 Desktop + GPU Acceleration (Turnip/Zink)"
+    echo -e " • Thunar File Manager & XFCE Terminal"
+    echo ""
+    echo -e "${PURPLE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}   By LP Tech${NC}"
+    echo -e "${PURPLE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${WHITE}⚡ TIP: Open Termux-X11 app first, then run start-ubuntu.sh${NC}"
+    echo ""
 }
 
-install_package() {
-    local package="$1"
-
-    if package_installed "$package"; then
-        success "$package sudah terpasang."
-        return 0
-    fi
-
-    info "Memasang paket: $package"
-
-    if pkg install -y "$package" >> "$LOG_FILE" 2>&1; then
-        if ! grep -Fxq "$package" "$MANIFEST" 2>/dev/null; then
-            printf '%s\n' "$package" >> "$MANIFEST"
-        fi
-
-        success "$package berhasil dipasang."
-        return 0
-    else
-        warn "Paket $package gagal dipasang."
-        warn "Periksa ketersediaan paket dan log instalasi."
-        log "INSTALL FAILED: $package"
-        return 1
-    fi
-}
-
-# ---------- ENVIRONMENT CHECK ----------
-
-check_environment() {
-    if [ ! -x "$PREFIX/bin/pkg" ]; then
-        error "Lingkungan Termux tidak terdeteksi."
-        printf 'Jalankan skrip ini dari aplikasi Termux.\n'
-        exit 1
-    fi
-
-    if [ "$(id -u)" -eq 0 ]; then
-        warn "Skrip ini dirancang untuk lingkungan Termux tanpa root."
-    fi
-
-    if ! command -v dpkg-query >/dev/null 2>&1; then
-        error "dpkg-query tidak tersedia."
-        exit 1
-    fi
-
-    success "Lingkungan Termux terdeteksi."
-}
-
-# ---------- REPOSITORIES ----------
-
-setup_repositories() {
-    info "Memperbarui daftar paket..."
-
-    if ! pkg update -y >> "$LOG_FILE" 2>&1; then
-        warn "Pembaruan daftar paket gagal."
-        warn "Periksa koneksi internet dan repositori Termux."
-    fi
-
-    if ! package_installed x11-repo; then
-        if pkg install -y x11-repo >> "$LOG_FILE" 2>&1; then
-            if ! grep -Fxq x11-repo "$MANIFEST" 2>/dev/null; then
-                printf '%s\n' x11-repo >> "$MANIFEST"
-            fi
-            success "Repositori X11 siap."
-        else
-            error "Gagal memasang x11-repo."
-            return 1
-        fi
-    else
-        success "Repositori X11 sudah terpasang."
-    fi
-
-    if ! pkg update -y >> "$LOG_FILE" 2>&1; then
-        warn "Pembaruan setelah menambahkan repositori gagal."
-    fi
-
-    return 0
-}
-
-# ---------- CORE INSTALLATION ----------
-
-install_core() {
-    local packages=(
-        termux-x11-nightly
-        xfce4
-        xfce4-terminal
-        thunar
-        mousepad
-        dbus
-        pulseaudio
-        procps
-        coreutils
-        findutils
-        grep
-        sed
-    )
-
-    local failed=0
-    local total="${#packages[@]}"
-    local current=0
-    local package
-
-    printf '\n=== INSTALASI DESKTOP XFCE ===\n\n'
-
-    for package in "${packages[@]}"; do
-        current=$((current + 1))
-
-        printf '[%s/%s] %s\n' "$current" "$total" "$package"
-
-        if ! install_package "$package"; then
-            failed=1
-        fi
-    done
-
-    if [ "$failed" -eq 0 ]; then
-        success "Seluruh paket inti berhasil dipasang."
-    else
-        warn "Beberapa paket inti gagal dipasang."
-        warn "Periksa log: $LOG_FILE"
-    fi
-}
-
-# ---------- OPTIONAL APPLICATIONS ----------
-
-offer_package() {
-    local title="$1"
-    local package="$2"
-    local description="$3"
-
-    printf '\n%s\n' "$title"
-    printf '%s\n' "$description"
-
-    if ask_yes_no "Pasang $title?"; then
-        install_package "$package" || true
-    else
-        info "$title dilewati."
-    fi
-}
-
-install_optional_apps() {
-    printf '\n'
-    printf '%s\n' '=== APLIKASI TAMBAHAN ==='
-    printf '%s\n' 'Pilih y untuk memasang atau n untuk melewati.'
-
-    offer_package "Git" "git" \
-        "Pengelolaan repositori dan kode sumber."
-
-    offer_package "Python" "python" \
-        "Bahasa pemrograman Python."
-
-    offer_package "Firefox" "firefox" \
-        "Peramban web jika tersedia untuk repositori aktif."
-
-    offer_package "Editor kode (Code OSS)" "code-oss" \
-        "Paket ini mungkin tidak tersedia di semua repositori Termux."
-
-    offer_package "VLC" "vlc" \
-        "Pemutar media jika paket kompatibel tersedia."
-
-    offer_package "Nmap" "nmap" \
-        "Utilitas pemindaian jaringan untuk jaringan yang diizinkan."
-
-    offer_package "DNS utilities" "dnsutils" \
-        "Utilitas pemeriksaan DNS."
-
-    offer_package "Whois" "whois" \
-        "Pemeriksaan informasi registrasi domain."
-
-    offer_package "Wget" "wget" \
-        "Pengunduh berkas melalui jaringan."
-
-    offer_package "Curl" "curl" \
-        "Utilitas transfer data melalui jaringan."
-
-    success "Pemilihan aplikasi tambahan selesai."
-}
-
-# ---------- DESKTOP SCRIPTS ----------
-
-create_desktop_scripts() {
-    mkdir -p "$BIN_DIR"
-
-    cat > "$BIN_DIR/lp-start-xfce" <<'START_EOF'
-#!/data/data/com.termux/files/usr/bin/bash
-
-CONFIG_DIR="$HOME/.config/lp-tech"
-mkdir -p "$CONFIG_DIR"
-
-DISPLAY_NUMBER=":1"
-X11_PID_FILE="$CONFIG_DIR/termux-x11.pid"
-SESSION_PID_FILE="$CONFIG_DIR/xfce-session.pid"
-LOG_FILE="$CONFIG_DIR/desktop.log"
-
-if ! command -v termux-x11 >/dev/null 2>&1; then
-    echo "termux-x11 belum terpasang."
-    exit 1
-fi
-
-if ! command -v xfce4-session >/dev/null 2>&1; then
-    echo "XFCE belum terpasang."
-    exit 1
-fi
-
-if [ -f "$SESSION_PID_FILE" ]; then
-    OLD_PID="$(cat "$SESSION_PID_FILE" 2>/dev/null)"
-
-    if [[ "$OLD_PID" =~ ^[0-9]+$ ]] &&
-        kill -0 "$OLD_PID" 2>/dev/null; then
-        echo "Sesi XFCE mungkin sudah berjalan (PID $OLD_PID)."
-        exit 0
-    fi
-
-    rm -f "$SESSION_PID_FILE"
-fi
-
-echo "Memulai Termux:X11..."
-
-termux-x11 "$DISPLAY_NUMBER" >> "$LOG_FILE" 2>&1 &
-X11_PID=$!
-echo "$X11_PID" > "$X11_PID_FILE"
-
-sleep 2
-
-if ! kill -0 "$X11_PID" 2>/dev/null; then
-    echo "Termux:X11 gagal berjalan. Periksa $LOG_FILE"
-    rm -f "$X11_PID_FILE"
-    exit 1
-fi
-
-echo "Memulai sesi XFCE..."
-
-(
-    export DISPLAY="$DISPLAY_NUMBER"
-    export XDG_RUNTIME_DIR="${TMPDIR:-$PREFIX/tmp}"
-    export PULSE_SERVER="127.0.0.1"
-
-    if command -v pulseaudio >/dev/null 2>&1; then
-        pulseaudio --start --exit-idle-time=-1 \
-            >> "$LOG_FILE" 2>&1 || true
-    fi
-
-    if command -v dbus-launch >/dev/null 2>&1; then
-        exec dbus-launch --exit-with-session xfce4-session
-    else
-        exec xfce4-session
-    fi
-) >> "$LOG_FILE" 2>&1 &
-
-SESSION_PID=$!
-echo "$SESSION_PID" > "$SESSION_PID_FILE"
-
-sleep 2
-
-if kill -0 "$SESSION_PID" 2>/dev/null; then
-    echo "Permintaan mulai XFCE berhasil."
-    echo "Buka aplikasi Android Termux:X11."
-    echo "Display: $DISPLAY_NUMBER"
-else
-    echo "Sesi XFCE berhenti. Periksa $LOG_FILE"
-    rm -f "$SESSION_PID_FILE"
-    exit 1
-fi
-START_EOF
-
-    cat > "$BIN_DIR/lp-stop-xfce" <<'STOP_EOF'
-#!/data/data/com.termux/files/usr/bin/bash
-
-CONFIG_DIR="$HOME/.config/lp-tech"
-X11_PID_FILE="$CONFIG_DIR/termux-x11.pid"
-SESSION_PID_FILE="$CONFIG_DIR/xfce-session.pid"
-
-stop_recorded_pid() {
-    local file="$1"
-    local name="$2"
-    local pid=""
-
-    if [ ! -f "$file" ]; then
-        echo "$name tidak memiliki PID tercatat."
-        return
-    fi
-
-    pid="$(cat "$file" 2>/dev/null)"
-
-    if [[ "$pid" =~ ^[0-9]+$ ]] &&
-        kill -0 "$pid" 2>/dev/null; then
-        echo "Mengirim sinyal berhenti ke $name (PID $pid)..."
-        kill -TERM "$pid" 2>/dev/null || true
-        sleep 1
-
-        if kill -0 "$pid" 2>/dev/null; then
-            echo "$name masih berjalan; tidak dipaksa berhenti."
-        fi
-    fi
-
-    rm -f "$file"
-}
-
-stop_recorded_pid "$SESSION_PID_FILE" "Sesi XFCE"
-stop_recorded_pid "$X11_PID_FILE" "Termux:X11"
-
-echo "Permintaan berhenti selesai."
-echo "Jika masih berjalan, tutup sesi melalui aplikasi Termux:X11."
-STOP_EOF
-
-    chmod 700 "$BIN_DIR/lp-start-xfce" "$BIN_DIR/lp-stop-xfce"
-
-    success "Skrip mulai dan berhenti desktop dibuat."
-}
-
-# ---------- COMMAND MENU ----------
-
-create_lp_command() {
-    local lp_file="$PREFIX/bin/lp"
-
-    if [ -e "$lp_file" ] &&
-        ! grep -q 'LP_TECH_UBUNTU_TERMUX_AUTO' "$lp_file" 2>/dev/null; then
-        warn "Perintah lp sudah digunakan oleh file lain."
-        warn "File tersebut tidak akan ditimpa."
-        return 0
-    fi
-
-    cat > "$lp_file" <<'LP_EOF'
-#!/data/data/com.termux/files/usr/bin/bash
-# LP_TECH_UBUNTU_TERMUX_AUTO
-
-VERSION="1.1"
-CONFIG_DIR="$HOME/.config/lp-tech"
-BIN_DIR="$HOME/.local/bin"
-LOG_FILE="$CONFIG_DIR/install.log"
-MANIFEST="$CONFIG_DIR/installed-packages.txt"
-
-mkdir -p "$CONFIG_DIR"
-touch "$LOG_FILE" "$MANIFEST"
-
-info() { printf '\033[0;36m[INFO]\033[0m %s\n' "$*"; }
-ok() { printf '\033[0;32m[ OK ]\033[0m %s\n' "$*"; }
-warn() { printf '\033[0;33m[WARN]\033[0m %s\n' "$*"; }
-
-pause() {
-    printf '\nTekan Enter untuk kembali...'
-    read -r _
-}
-
-show_info() {
-    echo
-    echo "=== INFORMASI SISTEM ==="
-    echo "Versi LP Tech : $VERSION"
-    echo "Android       : $(getprop ro.build.version.release 2>/dev/null || echo tidak diketahui)"
-    echo "Arsitektur    : $(dpkg --print-architecture 2>/dev/null || uname -m)"
-    echo "Termux PREFIX : ${PREFIX:-tidak diketahui}"
-
-    echo
-    echo "Ruang penyimpanan:"
-    df -h "$HOME" 2>/dev/null | tail -n 1
-
-    echo
-    echo "Paket inti:"
-
-    for p in termux-x11-nightly xfce4 xfce4-terminal thunar mousepad dbus; do
-        if dpkg-query -W -f='${Status}' "$p" 2>/dev/null |
-            grep -q 'install ok installed'; then
-            printf '  [OK] %s\n' "$p"
-        else
-            printf '  [--] %s belum terpasang\n' "$p"
-        fi
-    done
-}
-
-install_apps() {
-    local package
-
-    while true; do
-        echo
-        echo "=== INSTAL APLIKASI OPSIONAL ==="
-        echo "[1] Git"
-        echo "[2] Python"
-        echo "[3] Firefox"
-        echo "[4] Code OSS"
-        echo "[5] VLC"
-        echo "[6] Nmap"
-        echo "[7] DNS utilities"
-        echo "[8] Whois"
-        echo "[9] Wget"
-        echo "[10] Curl"
-        echo "[0] Kembali"
-        printf 'Pilih aplikasi: '
-        read -r choice
-
-        case "$choice" in
-            1) package=git ;;
-            2) package=python ;;
-            3) package=firefox ;;
-            4) package=code-oss ;;
-            5) package=vlc ;;
-            6) package=nmap ;;
-            7) package=dnsutils ;;
-            8) package=whois ;;
-            9) package=wget ;;
-            10) package=curl ;;
-            0) return ;;
-            *) warn "Pilihan tidak valid."; continue ;;
-        esac
-
-        printf 'Pasang %s? [y/N]: ' "$package"
-        read -r answer
-
-        case "$answer" in
-            y|Y|yes|YES|Yes)
-                if dpkg-query -W -f='${Status}' "$package" 2>/dev/null |
-                    grep -q 'install ok installed'; then
-                    ok "$package sudah terpasang."
-                    continue
-                fi
-
-                if pkg install -y "$package" >> "$LOG_FILE" 2>&1; then
-                    if ! grep -Fxq "$package" "$MANIFEST" 2>/dev/null; then
-                        printf '%s\n' "$package" >> "$MANIFEST"
-                    fi
-                    ok "$package berhasil dipasang."
-                else
-                    warn "Gagal memasang $package. Periksa $LOG_FILE"
-                fi
-                ;;
-            *)
-                info "$package dilewati."
-                ;;
-        esac
-    done
-}
-
-diagnostics() {
-    echo
-    echo "=== DIAGNOSTIK DASAR ==="
-
-    for cmd in pkg termux-x11 xfce4-session dbus-launch; do
-        if command -v "$cmd" >/dev/null 2>&1; then
-            echo "[OK] $cmd ditemukan"
-        else
-            echo "[--] $cmd tidak ditemukan"
-        fi
-    done
-
-    echo
-    echo "Log installer: $LOG_FILE"
-    echo "Log desktop  : $CONFIG_DIR/desktop.log"
-    echo
-    echo "Pastikan aplikasi Android Termux:X11 terpasang."
-}
-
-backup_config() {
-    local destination="$HOME/lp-tech-backup-$(date +%Y%m%d-%H%M%S).tar.gz"
-
-    if tar -czf "$destination" \
-        -C "$HOME" \
-        .config/lp-tech \
-        .local/bin/lp-start-xfce \
-        .local/bin/lp-stop-xfce \
-        2>> "$LOG_FILE"; then
-        ok "Backup tersimpan:"
-        echo "$destination"
-    else
-        warn "Backup gagal. Periksa log."
-        rm -f "$destination"
-    fi
-}
-
-restore_config() {
-    local archive
-
-    printf 'Path file backup .tar.gz: '
-    read -r archive
-
-    if [ ! -f "$archive" ]; then
-        warn "File tidak ditemukan."
-        return
-    fi
-
-    printf 'Pulihkan konfigurasi dari file ini? [y/N]: '
-    read -r answer
-
-    case "$answer" in
-        y|Y|yes|YES|Yes)
-            if tar -tzf "$archive" 2>/dev/null |
-                grep -qE '(^/|(^|/)\.\.(/|$))'; then
-                warn "Arsip berisi jalur tidak aman."
-                return
-            fi
-
-            if tar -xzf "$archive" -C "$HOME" >> "$LOG_FILE" 2>&1; then
-                ok "Pemulihan selesai."
-            else
-                warn "Pemulihan gagal. Periksa log."
-            fi
-            ;;
-        *) info "Pemulihan dibatalkan." ;;
-    esac
-}
-
-show_help() {
-    cat <<'HELP_EOF'
-
-LP Tech - ubuntu-termux-auto v1.1
-
-1. Pastikan aplikasi Android Termux:X11 terpasang.
-2. Jalankan lp.
-3. Pilih Start XFCE Desktop.
-4. Buka aplikasi Termux:X11.
-
-Jika desktop gagal:
-~/.config/lp-tech/install.log
-~/.config/lp-tech/desktop.log
-
-Proyek ini memasang XFCE langsung di Termux,
-bukan Ubuntu melalui proot-distro.
-
-HELP_EOF
-}
-
-while true; do
-    clear 2>/dev/null || true
-
-    printf '\033[0;36m'
-    cat <<'BANNER_EOF'
- _      ____    _____          _
-| |    |  _ \  |_   _|__   ___| |__
-| |    | |_) |   | |/ _ \ / __| '_ \
-| |___ |  __/    | | (_) | (__| | | |
-|_____||_|       |_|\___/ \___|_| |_|
-
-       LP TECH | VERSION 1.1
-BANNER_EOF
-    printf '\033[0m\n'
-
-    echo "[1]  Start XFCE Desktop"
-    echo "[2]  Stop XFCE Desktop"
-    echo "[3]  Install Optional Apps"
-    echo "[4]  Update Packages"
-    echo "[5]  System Information"
-    echo "[6]  Diagnose / Repair"
-    echo "[7]  Backup Configuration"
-    echo "[8]  Restore Configuration"
-    echo "[9]  View Installation Log"
-    echo "[10] Help & About"
-    echo "[11] Uninstall LP Tech Components"
-    echo "[0]  Exit"
-    echo
-
-    printf 'Pilih menu: '
-    read -r choice
-
-    case "$choice" in
-        1)
-            "$BIN_DIR/lp-start-xfce"
-            pause
-            ;;
-        2)
-            "$BIN_DIR/lp-stop-xfce"
-            pause
-            ;;
-        3)
-            install_apps
-            ;;
-        4)
-            pkg update -y && pkg upgrade -y
-            pause
-            ;;
-        5)
-            show_info
-            pause
-            ;;
-        6)
-            diagnostics
-            pause
-            ;;
-        7)
-            backup_config
-            pause
-            ;;
-        8)
-            restore_config
-            pause
-            ;;
-        9)
-            if [ -f "$LOG_FILE" ]; then
-                tail -n 80 "$LOG_FILE"
-            else
-                echo "Log belum tersedia."
-            fi
-            pause
-            ;;
-        10)
-            show_help
-            pause
-            ;;
-        11)
-            if [ -x "$CONFIG_DIR/uninstall.sh" ]; then
-                "$CONFIG_DIR/uninstall.sh"
-            else
-                echo "Uninstaller belum tersedia di konfigurasi LP Tech."
-                echo "Jalankan bash uninstall.sh dari folder repositori."
-            fi
-            pause
-            ;;
-        0)
-            exit 0
-            ;;
-        *)
-            warn "Pilihan tidak valid."
-            pause
-            ;;
-    esac
-done
-LP_EOF
-
-    chmod 700 "$lp_file"
-    success "Perintah lp berhasil dibuat."
-}
-
-# ---------- BASHRC PATH ----------
-
-configure_path() {
-    local marker="# LP_TECH_UBUNTU_TERMUX_AUTO_PATH"
-
-    touch "$BASHRC"
-
-    if ! grep -Fq "$marker" "$BASHRC"; then
-        cat >> "$BASHRC" <<'PATH_EOF'
-
-# LP_TECH_UBUNTU_TERMUX_AUTO_PATH
-case ":$PATH:" in
-    *":$HOME/.local/bin:"*) ;;
-    *) export PATH="$HOME/.local/bin:$PATH" ;;
-esac
-PATH_EOF
-    fi
-
-    success "PATH untuk skrip desktop dikonfigurasi."
-}
-
-# ---------- MAIN ----------
+============== MAIN INSTALLATION ==============
 
 main() {
-    banner
-    check_environment
+    show_banner
+    echo -e "${WHITE} This script will install a complete Linux XFCE desktop with${NC}"
+    echo -e "${WHITE} Firefox browser and GPU acceleration on your Android phone.${NC}"
+    echo ""
+    echo -e "${GRAY} Estimated time: 5-10 minutes (depends on internet speed)${NC}"
+    echo ""
+    echo -e "${YELLOW} Press Enter to start installation, or Ctrl+C to cancel...${NC}"
+    read
 
-    printf '%s\n' \
-        "Installer memasang XFCE langsung di Termux." \
-        "Termux:X11 membutuhkan aplikasi Android pendamping." \
-        "Instalasi membutuhkan koneksi internet dan ruang penyimpanan."
+    detect_device
+    step_update
+    step_repos
+    step_x11
+    step_desktop
+    step_gpu
+    step_audio
+    step_apps
+    step_launchers
 
-    if ! ask_yes_no "Lanjutkan instalasi LP Tech v$VERSION?"; then
-        info "Instalasi dibatalkan."
-        exit 0
-    fi
-
-    log "===== START INSTALL $VERSION ====="
-
-    if setup_repositories; then
-        install_core
-    else
-        error "Penyiapan repositori gagal."
-        warn "Periksa koneksi dan repositori sebelum mencoba kembali."
-    fi
-
-    create_desktop_scripts
-    configure_path
-    create_lp_command
-
-    # Simpan salinan uninstaller jika tersedia di repositori.
-    if [ -f "$(dirname "$0")/uninstall.sh" ]; then
-        cp "$(dirname "$0")/uninstall.sh" "$CONFIG_DIR/uninstall.sh"
-        chmod 700 "$CONFIG_DIR/uninstall.sh"
-    fi
-
-    if ask_yes_no "Ingin memilih aplikasi tambahan sekarang?"; then
-        install_optional_apps
-    fi
-
-    printf '\n'
-    printf '%s\n' '=============================================='
-    success "Proses installer selesai."
-    printf '%s\n' '=============================================='
-    printf 'Perintah menu : lp\n'
-    printf 'Log installer : %s\n' "$LOG_FILE"
-    printf 'Log desktop   : %s/desktop.log\n' "$CONFIG_DIR"
-    printf '\n'
-    printf '%s\n' \
-        'Pastikan aplikasi Android Termux:X11 terpasang.' \
-        'Jalankan: source ~/.bashrc' \
-        'Kemudian: lp'
-
-    log "===== END INSTALL $VERSION ====="
+    show_completion
 }
 
-main "$@"
+main
