@@ -1,4 +1,3 @@
-```markdown
 # 📱 TUbuntu (Termux Ubuntu) by LP Tech
 ### Jalankan Desktop Linux dengan Akselerasi GPU di Android (Tanpa Root!)
 > Ubah ponsel Android Anda menjadi lingkungan desktop Linux yang lancar hanya dengan satu perintah!
