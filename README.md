@@ -1,16 +1,16 @@
-# 🐧 Ubuntu XFCE Auto-Installer for Termux (No Root) - v1.1
+# 🐧 Ubuntu XFCE Auto-Installer for Termux (No Root) - v1.2
 
-Skrip otomatis untuk memasang **Ubuntu Desktop (XFCE)** di Android menggunakan Termux & Termux-X11 tanpa perlu akses Root. 
+Skrip otomatis pintar untuk memasang **Ubuntu Desktop (XFCE)** di Android menggunakan Termux & Termux-X11 tanpa perlu akses Root. 
 
 ---
 
-## ✨ Fitur Versi 1.1
+## ✨ Fitur Versi 1.2
+- **Smart Device Detection:** Otomatis mendeteksi arsitektur CPU, kapasitas RAM, dan sisa penyimpanan perangkat Anda sebelum instalasi dimulai.
 - **One-Liner Command:** Instalasi serba otomatis cukup dengan 1 perintah.
-- **Hardware Protection:** Pengecekan otomatis arsitektur CPU (ARM64) untuk mencegah kesalahan eksekusi binary.
-- **Interactive App Wizard:** Pilih aplikasi desktop yang dibutuhkan secara interaktif (*Firefox, Code-OSS, LibreOffice, GIMP*).
-- **Non-Interactive APT Guard:** Kebal terhadap *hang/freeze* saat proses instalasi paket Debian.
-- **PulseAudio & Termux-X11 Integration:** Audio & Tampilan Desktop langsung aktif dan terhubung.
-- **Shortcut Pintar:** Jalankan Linux kapan saja hanya dengan mengtik `startlinux`.
+- **Hardware Protection:** Validasi otomatis keamanan CPU (wajib ARM64/aarch64).
+- **Interactive App Wizard:** Pilih aplikasi desktop tambahan sesuai kebutuhan (*Firefox, Code-OSS, LibreOffice, GIMP*).
+- **Non-Interactive APT Guard:** Mencegah sistem *hang/freeze* saat menginstal paket Debian di latar belakang.
+- **Shortcut Pintar:** Jalankan Linux kapan saja cukup dengan mengetik `startlinux`.
 
 ---
 
@@ -20,4 +20,4 @@ Skrip otomatis untuk memasang **Ubuntu Desktop (XFCE)** di Android menggunakan T
 2. Tempel dan jalankan satu baris perintah berikut:
 
 ```bash
-bash <(curl -s [https://raw.githubusercontent.com/USERNAME-ANDA/ubuntu-termux-auto/main/install.sh](https://raw.githubusercontent.com/USERNAME-ANDA/ubuntu-termux-auto/main/install.sh))
+bash <(curl -s [https://raw.githubusercontent.com/lptech22/ubuntu-termux-auto/main/install.sh](https://raw.githubusercontent.com/lptech22/ubuntu-termux-auto/main/install.sh))
