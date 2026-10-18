@@ -12,12 +12,12 @@
 Buka **Termux** lalu tempelkan salah satu perintah berikut:
 
 ```bash
-curl -sL [https://raw.githubusercontent.com/lptech22/TUbuntu/main/install.sh](https://raw.githubusercontent.com/lptech22/TUbuntu/main/install.sh) | bash
+curl -sL https://raw.githubusercontent.com/lptech22/TUbuntu/main/install.sh | bash
 
 ```
 **Atau menggunakan wget:**
 ```bash
-wget -O - [https://raw.githubusercontent.com/lptech22/TUbuntu/main/install.sh](https://raw.githubusercontent.com/lptech22/TUbuntu/main/install.sh) | bash
+wget -O - https://raw.githubusercontent.com/lptech22/TUbuntu/main/install.sh | bash
 
 ```
 ## ✨ Fitur Utama
