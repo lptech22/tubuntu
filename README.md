@@ -1,79 +1,37 @@
-# 📱 TUbuntu (Termux Ubuntu) by LP Tech
-### Jalankan Desktop Linux dengan Akselerasi GPU di Android (Tanpa Root!)
-> Ubah ponsel Android Anda menjadi lingkungan desktop Linux yang lancar hanya dengan satu perintah!
+# tubuntu
 
-![GPU](https://img.shields.io/badge/GPU-Accelerated-orange?style=for-the-badge)
-![Root](https://img.shields.io/badge/Root-Tidak%20Dibutuhkan-brightgreen?style=for-the-badge)
+Desktop Linux (XFCE4) di Android tanpa root, ditampilkan lewat AVNC.
 
----
+## Instalasi
 
-## 🚀 Instalasi (Satu Perintah)
-
-Buka **Termux** lalu tempelkan salah satu perintah berikut:
+Buka Termux, lalu jalankan:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/lptech22/TUbuntu/main/install.sh | bash
-
+curl -sL https://raw.githubusercontent.com/lptech22/tubuntu/main/install.sh | bash
 ```
-**Atau menggunakan wget:**
+
+Di tengah instalasi, Anda akan diminta membuat password VNC.
+
+## Pemakaian
+
+1. Ketik `tubuntu start`.
+2. Buka AVNC, tambahkan koneksi baru dengan alamat `127.0.0.1` dan port `5901`, lalu masukkan password VNC.
+3. Hentikan dengan `tubuntu stop`.
+
+## Aplikasi
+
+XFCE4, Thunar, Mousepad, Firefox, VS Code (code-oss), git, wget, dan curl.
+
+## Hapus
+
 ```bash
-wget -O - https://raw.githubusercontent.com/lptech22/TUbuntu/main/install.sh | bash
-
+tubuntu uninstall
 ```
-## ✨ Fitur Utama
-| Fitur | Deskripsi |
-|---|---|
-| 🖥️ **Desktop Linux Lengkap** | Lingkungan Desktop XFCE4 dengan Termux-X11 |
-| 🎮 **Akselerasi GPU** | Driver Turnip/Zink untuk tampilan halus (hingga 60 FPS) |
-| 🔓 **Tanpa Root** | Dapat dijalankan di Hampir Semua HP Android |
-| 🌐 **Peramban Web** | Firefox resmi siap pakai |
-| 💻 **Penyunting Kode** | VS Code (Code-OSS) untuk koding langsung di HP |
-| ⌨️ **Dukungan Perangkat Luar** | Keyboard & Mouse Bluetooth bekerja dengan sempurna |
-| 📊 **Indikator Progres** | Progres instalasi dalam persentase real-time |
-| 🔊 **Sistem Suara** | Dukungan PulseAudio untuk audio/suara |
-## 🎮 Akselerasi GPU - Apa Keunggulannya?
-Berbeda dengan panduan lain yang menggunakan rendering perangkat lunak (*software rendering*) yang lambat dan berbayang, **TUbuntu** mengonfigurasi akselerasi GPU secara langsung:
-| Tanpa Akselerasi GPU | Dengan Akselerasi GPU (TUbuntu) |
-|---|---|
-| llvmpipe (CPU) | **Turnip Adreno (GPU)** |
-| 15-20 FPS | **60 FPS** |
-| Lag/Patah-patah | **Lancar seperti PC** |
-| Boros Baterai | **Lebih Efisien** |
-## 📦 Aplikasi Terpasang
- * **Lingkungan Desktop**: XFCE4 Desktop & Thunar File Manager
- * **Aplikasi Utama**:
-   * 🦊 **Firefox Browser** (Peramban Web)
-   * 📝 **VS Code / Code-OSS** (Penyunting Kode)
-   * 🛠️ **Terminal & Mousepad**
-## 🛠️ Cara Penggunaan (Perintah Ringkas)
-Setelah instalasi selesai, cukup gunakan perintah tubuntu yang super mudah:
-| Perintah | Kegunaan |
-|---|---|
-| tubuntu | 📱 Membuka menu interaktif TUbuntu (dengan ASCII Art) |
-| tubuntu start | 🚀 Langsung menjalankan Desktop Linux |
-| tubuntu stop | 🛑 Mematikan sesi Desktop Linux |
-## 📋 Persyaratan Sistem
-| Persyaratan | Detail |
-|---|---|
-| **Android** | Versi 7.0 atau yang lebih baru |
-| **Termux** | [Download from GitHub](https://github.com/termux/termux-app/releases) (NOT Play Store!) |
-| **Termux-X11** | [Download from GitHub](https://github.com/termux/termux-x11/releases) |
-| **Penyimpanan** | Sisa ruang kosong ~3-4 GB |
-| **Koneksi Internet** | Dibutuhkan untuk proses instalasi awal |
-> ⚠️ **Penting:** Pastikan mengunduh aplikasi Termux dari GitHub/F-Droid, bukan dari Google Play Store karena versi Play Store sudah tidak diperbarui.
-> 
-## 💡 Tips Penggunaan
- 1. Buka aplikasi **Termux-X11** terlebih dahulu sebelum menjalankan perintah tubuntu atau tubuntu start.
- 2. Gunakan **Keyboard & Mouse Bluetooth** untuk pengalaman menggunakan desktop yang maksimal.
- 3. Anda juga dapat menghubungkannya ke Layar/TV luar (seperti fitur Samsung DeX).
-## 📺 Kunjungi & Hubungi Kami
-| Platform | Link |
-|---|---|
-| **GitHub** | lptech22 |
-<p align="center">
-<b>🔥 TUbuntu by LP Tech - Solusi Linux Desktop Ringan di Android 🔥</b>
 
+## Catatan
 
-<p align="center">
-Dibuat dengan ❤️ oleh <b>LP Tech</b>
-</p>
+- Termux: pasang dari F-Droid atau GitHub, bukan Play Store.
+- AVNC: bisa dari Play Store atau F-Droid.
+- Resolusi desktop default 1280x720.
+
+**LP Tech** · [GitHub lptech22](https://github.com/lptech22)
